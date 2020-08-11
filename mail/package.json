@@ -8,6 +8,8 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "axios": "^0.19.2",
+    "better-scroll": "^1.15.2",
     "core-js": "^3.6.5",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
@@ -23,5 +25,13 @@
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
     "vue-template-compiler": "^2.6.11"
+  },
+  "rules": {
+    "generator-star-spacing": "off",
+    "no-tabs": "off",
+    "no-unused-vars": "off",
+    "no-console": "off",
+    "no-irregular-whitespace": "off",
+    "no-debugger": "off"
   }
 }
