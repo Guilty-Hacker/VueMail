@@ -1,16 +1,19 @@
 <template>
   <div id="home">
     <nav-bar class="home-nav"> <div slot="center"> 购物街 </div> </nav-bar>
-    <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll">
-      <home-swiper :banners="banners"> </home-swiper>
-      <recommend-view :recommends="recommends"> </recommend-view>
-      <feature-view> </feature-view>
+    <scroll class="content"
+            ref="scroll"
+            :probe-type="3"
+            @scroll="contentScroll"
+            :pull-up-load="true"
+            @pullingUp="loadMore">
+      <home-swiper :banners="banners"/>
+      <recommend-view :recommends="recommends"/>
+      <feature-view/>
       <tab-control class="tab-control"
-                   :titles="['流行','新款','精选']"
-                    @tabClick="tabClick">
-
-      </tab-control>
-      <goods-list :goods="showGoods"> </goods-list>
+                   :titles="['流行', '新款', '精选']"
+                   @tabClick="tabClick"/>
+      <goods-list :goods="showGoods"/>
     </scroll>
     <back-top @click.native="backClick" v-show="isShow"> </back-top>
 
@@ -52,11 +55,18 @@
           'new':{page:0, list:[]},
           'sell':{page:0, list:[]},
         },
-        currentIndex:'pop',
+        currentType:'pop',
         isShow:false
       }
     },
+    mounted() {
+      //监听图片加载完成
+      const refresh = this.debounce(this.$refs.scroll.refresh(),50)
+      this.$bus.$on('itemImageLoad',()=>{
 
+        refresh()
+      })
+    },
     created() {
       //1.请求多个数据
       this.getHomeMultidata()
@@ -65,13 +75,26 @@
       this.getHomeGoods('new')
 
       this.getHomeGoods('sell')
+
     },
     computed:{
       showGoods(){
-        return this.goods[this.currentIndex].list
+        return this.goods[this.currentType].list
       }
     },
     methods:{
+      finishPullUp(){
+        this.scroll && this.scroll.finishPullUp()
+      },
+      debounce(fun, delay){
+        let timer = null
+        return function(...args){
+          if(timer) clearTimeout(timer)
+          timer = setTimeout(()=>{
+            fun.apply(this, args)
+          },delay)
+        }
+      },
       getHomeMultidata(){
         getHomeMultidata().then(res =>{
           // console.log(res);
@@ -85,27 +108,33 @@
           // console.log(res);
           this.goods[type].list.push(...res.data.list);
           this.goods[type].page += 1
+          this.$refs.scroll.finishPullUp()
+
         })
       },
       tabClick(index){
         switch (index) {
           case 0:
-            this.currentIndex = 'pop'
+            this.currentType = 'pop'
             break
           case 1:
-            this.currentIndex = 'new'
+            this.currentType = 'new'
             break
           case 2:
-            this.currentIndex = 'sell'
-
+            this.currentType = 'sell'
+            break
         }
       },
       backClick(){
         this.$refs.scroll.scrollTo(0,0)
       },
       contentScroll(position){
-        this.isShow = -position.y > 1000
+        this.isShow = (-position.y) > 1000
       },
+      loadMore(){
+        console.log('上拉加载');
+        this.getHomeGoods(this.currentType)
+      }
     }
 
   }
