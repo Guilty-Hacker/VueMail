@@ -1,7 +1,7 @@
 <template>
   <div id="detail">
-    <detail-nav-bar class="detail-nav" @titleClick="titleClick"/>
-    <scroll class="content" ref="scroll">
+    <detail-nav-bar class="detail-nav" @titleClick="titleClick" ref="nav"/>
+    <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll">
       <detail-swiper :top-images="topImages"/>
       <detail-base-info :goods="goods"/>
       <detail-shop-info :shop="shop"/>
@@ -10,6 +10,7 @@
       <detail-comment-info ref="comment" :comment-info="commentInfo"> </detail-comment-info>
       <goods-list ref="recommend" :goods="recommends"> </goods-list>
     </scroll>
+    <detail-bottom-bar @addCart="addToCart"> </detail-bottom-bar>
   </div>
 </template>
 
@@ -22,7 +23,7 @@
   import DetailParamInfo from './childComps/DetailParamInfo'
   import DetailCommentInfo from "./childComps/DetailCommentInfo";
   import GoodsList from "@/components/content/goods/GoodsList";
-
+  import DetailBottomBar from "./childComps/DetailBottomBar";
   import Scroll from '@/components/common/scroll/Scroll'
 
   import {getDetail, Goods, Shop, GoodsParam, getRecommend} from "../../network/detail";
@@ -37,6 +38,7 @@
       DetailGoodsInfo,
       DetailParamInfo,
       Scroll,
+      DetailBottomBar,
       GoodsList,
       DetailCommentInfo
     },
@@ -51,6 +53,8 @@
         commentInfo:{},
         recommends:[],
         themeTopYs:[],
+        currentIndex: 0,
+
       }
     },
     created() {
@@ -99,6 +103,30 @@
       titleClick(index){
         // console.log(index);
         this.$refs.scroll.scrollTo(0, -this.themeTopYs[index])
+      },
+      contentScroll(position){
+        const positionY = -position.y
+        // console.log(postion);
+        let length = this.themeTopYs.length
+        for(let i=0; i<length;i++){
+        if (this.currentIndex !== i &&((i < length - 1 && positionY >= this.themeTopYs[i] && positionY <
+            this.themeTopYs[i+1]) || (i===length-1 && positionY >= this.themeTopYs[i]))){
+            this.currentIndex = i;
+            this.$refs.nav.currentIndex = this.currentIndex
+          }
+        }
+      },
+      addToCart(){
+        //1.获取商品信息
+        const product = {}
+        product.image = this.topImages[0]
+        product.title = this.goods.title
+        product.desc = this.goods.desc
+        product.price = this.goods.realPrice
+        product.iid = this.iid
+        //2.将商品添加到购物车
+        // this.$store.commit('addCart', product)
+        this.$store.dispatch('addCart',product)
       },
     }
   }
